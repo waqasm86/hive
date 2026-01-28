@@ -36,7 +36,9 @@ def _get_robots_parser(base_url: str, timeout: float = 10.0) -> RobotFileParser 
     robots_url = f"{base_url}/robots.txt"
     parser = RobotFileParser()
     try:
-        response = httpx.get(robots_url, headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=timeout)
+        response = httpx.get(
+            robots_url, headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=timeout
+        )
         if response.status_code == 200:
             parser.parse(response.text.splitlines())
             _robots_cache[base_url] = parser
@@ -63,16 +65,35 @@ def _is_allowed_by_robots(url: str) -> tuple[bool, str]:
 
 def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
-    def web_scrape(url: str, selector: str | None = None, include_links: bool = False, max_length: int = 50000, respect_robots_txt: bool = True) -> dict:
+    def web_scrape(
+        url: str,
+        selector: str | None = None,
+        include_links: bool = False,
+        max_length: int = 50000,
+        respect_robots_txt: bool = True,
+    ) -> dict:
         try:
             if not url.startswith(("http://", "https://")):
                 url = "https://" + url
             if respect_robots_txt:
                 allowed, reason = _is_allowed_by_robots(url)
                 if not allowed:
-                    return {"error": f"Scraping blocked: {reason}", "blocked_by_robots_txt": True, "url": url}
+                    return {
+                        "error": f"Scraping blocked: {reason}",
+                        "blocked_by_robots_txt": True,
+                        "url": url,
+                    }
             max_length = max(1000, min(max_length, 500000))
-            response = httpx.get(url, headers={"User-Agent": BROWSER_USER_AGENT, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "en-US,en;q=0.5"}, follow_redirects=True, timeout=30.0)
+            response = httpx.get(
+                url,
+                headers={
+                    "User-Agent": BROWSER_USER_AGENT,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.5",
+                },
+                follow_redirects=True,
+                timeout=30.0,
+            )
             if response.status_code != 200:
                 return {"error": f"HTTP {response.status_code}: Failed to fetch URL"}
             content_type_raw = response.headers.get("content-type", "")
@@ -82,10 +103,20 @@ def register_tools(mcp: FastMCP) -> None:
                 content_type = alt.lower() if isinstance(alt, str) else ""
             if not any(t in content_type for t in ["text/html", "application/xhtml+xml"]):
                 body_snippet = (response.text or "")[:500].lower()
-                if not ("<html" in body_snippet or "<!doctype html" in body_snippet or "<body" in body_snippet):
-                    return {"error": f"Skipping non-HTML content (Content-Type: {content_type_raw})", "url": url, "skipped": True}
+                if not (
+                    "<html" in body_snippet
+                    or "<!doctype html" in body_snippet
+                    or "<body" in body_snippet
+                ):
+                    return {
+                        "error": f"Skipping non-HTML content (Content-Type: {content_type_raw})",
+                        "url": url,
+                        "skipped": True,
+                    }
             soup = BeautifulSoup(response.text, "html.parser")
-            for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript", "iframe"]):
+            for tag in soup(
+                ["script", "style", "nav", "footer", "header", "aside", "noscript", "iframe"]
+            ):
                 tag.decompose()
             title = soup.title.get_text(strip=True) if soup.title else ""
             description = ""
@@ -98,12 +129,25 @@ def register_tools(mcp: FastMCP) -> None:
                     return {"error": f"No elements found matching selector: {selector}"}
                 text = content_elem.get_text(separator=" ", strip=True)
             else:
-                main_content = (soup.find("article") or soup.find("main") or soup.find(attrs={"role": "main"}) or soup.find(class_=["content", "post", "entry", "article-body"]) or soup.find("body"))
+                main_content = (
+                    soup.find("article")
+                    or soup.find("main")
+                    or soup.find(attrs={"role": "main"})
+                    or soup.find(class_=["content", "post", "entry", "article-body"])
+                    or soup.find("body")
+                )
                 text = main_content.get_text(separator=" ", strip=True) if main_content else ""
             text = " ".join(text.split())
             if len(text) > max_length:
                 text = text[:max_length] + "..."
-            result: dict[str, Any] = {"url": str(response.url), "title": title, "description": description, "content": text, "length": len(text), "robots_txt_respected": respect_robots_txt}
+            result: dict[str, Any] = {
+                "url": str(response.url),
+                "title": title,
+                "description": description,
+                "content": text,
+                "length": len(text),
+                "robots_txt_respected": respect_robots_txt,
+            }
             if include_links:
                 links: list[dict[str, str]] = []
                 base_url = str(response.url)
