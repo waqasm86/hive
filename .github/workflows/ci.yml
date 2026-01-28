@@ -28,15 +28,25 @@ jobs:
           pip install -e tools || true
           pip install -r core/requirements-dev.txt
 
-      - name: Ruff lint
+      - name: Ruff lint (core)
+        working-directory: core
         run: |
-          ruff check core
-          ruff check tools
+          ruff check .
 
-      - name: Ruff format
+      - name: Ruff lint (tools)
+        working-directory: tools
         run: |
-          ruff format --check core
-          ruff format --check tools
+          ruff check .
+
+      - name: Ruff format (core)
+        working-directory: core
+        run: |
+          ruff format --check .
+
+      - name: Ruff format (tools)
+        working-directory: tools
+        run: |
+          ruff format --check .
 
   test:
     name: Test Python Framework
@@ -57,8 +67,8 @@ jobs:
           pip install -r core/requirements-dev.txt
 
       - name: Run tests
+        working-directory: core
         run: |
-          cd core
           pytest tests/ -v
 
   validate:
