@@ -25,9 +25,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd core
-          pip install -e .
-          pip install -r requirements-dev.txt
+          pip install -e core
+          pip install -e tools || true
+          pip install -r core/requirements-dev.txt
 
       - name: Ruff lint
         run: |
@@ -53,9 +53,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd core
-          pip install -e .
-          pip install -r requirements-dev.txt
+          pip install -e core
+          pip install -e tools || true
+          pip install -r core/requirements-dev.txt
 
       - name: Run tests
         run: |
@@ -77,9 +77,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd core
-          pip install -e .
-          pip install -r requirements-dev.txt
+          pip install -e core
+          pip install -e tools || true
+          pip install -r core/requirements-dev.txt
 
       - name: Validate exported agents
         run: |
