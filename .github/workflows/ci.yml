@@ -56,11 +56,40 @@ jobs:
           cd core
           pip install -e .
           pip install -r requirements-dev.txt
-
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           cd core
-          pytest tests/ -v
+          pytest --cov=framework --cov-report=xml --cov-report=term-missing tests/ -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./core/coverage.xml
+          flags: core-framework
+          name: codecov-core
+          fail_ci_if_error: false
+
+  type-check:
+    name: Type Checking (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd core
+          pip install -e ./
+          pip install mypy
+
+      - name: Run mypy
+        run: |
+          mypy --config-file ../mypy.ini core/framework tools/src/aden_tools
 
   validate:
     name: Validate Agent Exports
