@@ -31,13 +31,13 @@ jobs:
 
       - name: Ruff lint
         run: |
-          cd core && ruff check .
-          cd tools && ruff check .
+          # Run ruff from the repo root against the core and tools packages
+          ruff check core tools
 
       - name: Ruff format
         run: |
-          cd core && ruff format --check .
-          cd tools && ruff format --check .
+          # Run ruff format checks from the repo root
+          ruff format --check core tools
 
   test:
     name: Test Python Framework
