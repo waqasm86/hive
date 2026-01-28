@@ -14,8 +14,8 @@ def get_secure_path(path: str, workspace_id: str, agent_id: str, session_id: str
     os.makedirs(session_dir, exist_ok=True)
 
     # Resolve absolute path; treat leading '/' as relative to the session root
-    if path.startswith('/') or path.startswith(os.sep):
-        rel_path = path.lstrip('/').lstrip(os.sep)
+    if path.startswith("/") or path.startswith(os.sep):
+        rel_path = path.lstrip("/").lstrip(os.sep)
         final_path = os.path.abspath(os.path.join(session_dir, rel_path))
     elif os.path.isabs(path):
         # On Windows, paths like '/etc/passwd' may not be considered absolute; handle above.

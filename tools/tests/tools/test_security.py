@@ -231,6 +231,7 @@ class TestGetSecurePath:
     def test_symlink_within_sandbox_works(self, ids):
         """Symlinks that stay within the sandbox are allowed."""
         import sys
+
         import pytest
 
         if sys.platform == "win32":
@@ -261,6 +262,7 @@ class TestGetSecurePath:
         This test documents that pattern.
         """
         import sys
+
         import pytest
 
         if sys.platform == "win32":
