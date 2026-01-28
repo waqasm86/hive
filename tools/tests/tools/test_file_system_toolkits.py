@@ -575,6 +575,11 @@ class TestExecuteCommandTool:
         # Create a test file
         (tmp_path / "testfile.txt").write_text("content")
 
+        import sys
+        if sys.platform == "win32":
+            import pytest
+            pytest.skip("shell 'ls' not available on Windows")
+
         result = execute_command_fn(command=f"ls {tmp_path}", **mock_workspace)
 
         assert result["success"] is True
@@ -583,6 +588,11 @@ class TestExecuteCommandTool:
 
     def test_execute_command_with_pipe(self, execute_command_fn, mock_workspace, mock_secure_path):
         """Executing a command with pipe works correctly."""
+        import sys
+        if sys.platform == "win32":
+            import pytest
+            pytest.skip("pipe + tr not available on Windows")
+
         result = execute_command_fn(command="echo 'hello world' | tr 'a-z' 'A-Z'", **mock_workspace)
 
         assert result["success"] is True

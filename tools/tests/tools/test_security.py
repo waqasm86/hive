@@ -230,6 +230,11 @@ class TestGetSecurePath:
 
     def test_symlink_within_sandbox_works(self, ids):
         """Symlinks that stay within the sandbox are allowed."""
+        import sys
+        import pytest
+
+        if sys.platform == "win32":
+            pytest.skip("symlink tests require privileges on Windows")
         from aden_tools.tools.file_system_toolkits.security import get_secure_path
 
         # Create session directory structure
@@ -255,6 +260,11 @@ class TestGetSecurePath:
         verify realpath(result) is still within the sandbox before file I/O.
         This test documents that pattern.
         """
+        import sys
+        import pytest
+
+        if sys.platform == "win32":
+            pytest.skip("symlink tests require privileges on Windows")
         from aden_tools.tools.file_system_toolkits.security import get_secure_path
 
         # Create session directory
