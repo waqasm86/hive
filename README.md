@@ -81,7 +81,7 @@ cd hive
 
 This installs:
 - **framework** - Core agent runtime and graph executor
-- **aden_tools** - 19 MCP tools for agent capabilities
+- **aden_tools** - MCP tools for agent capabilities (see docs/tools-catalog.md for current inventory)
 - All required dependencies
 
 ### Build Your First Agent
