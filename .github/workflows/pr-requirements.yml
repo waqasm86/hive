@@ -72,7 +72,7 @@ jobs:
                 state: 'closed',
               });
 
-              core.setFailed('PR must reference an issue');
+              throw new Error('PR must reference an issue');
               return;
             }
 
@@ -151,7 +151,7 @@ jobs:
                 state: 'closed',
               });
 
-              core.setFailed('PR author must be assigned to the linked issue');
+              throw new Error('PR author must be assigned to the linked issue');
             } else {
               console.log(`PR requirements met! Issue #${issueWithAuthorAssigned} has ${prAuthor} as assignee.`);
             }
