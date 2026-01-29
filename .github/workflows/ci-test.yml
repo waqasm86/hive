@@ -1,0 +1,29 @@
+name: CI Test
+
+on:
+  push:
+    branches:
+      - 'automation/*'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Smoke test (non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Show Python and pip versions
+        run: |
+          python -V
+          pip -V
+
+      - name: List core directory (if present)
+        run: |
+          if [ -d "core" ]; then ls -la core || true; else echo "no core dir"; fi
