@@ -7,6 +7,8 @@ on:
 
 jobs:
   auto-close-duplicates:
+    # Only run this job for the upstream repository where required secrets exist
+    if: github.repository == 'adenhq/hive'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -21,6 +23,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Run auto-close-duplicates tests
+        run: bun test scripts/auto-close-duplicates
 
       - name: Auto-close duplicate issues
         run: bun run scripts/auto-close-duplicates.ts

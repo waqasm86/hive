@@ -6,6 +6,7 @@ on:
 
 jobs:
   triage:
+    # Run if secrets are present (allows forks to run it if they add secrets)
     if: secrets.ANTHROPIC_API_KEY != '' || secrets.CLAUDE_CODE_OAUTH_TOKEN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
