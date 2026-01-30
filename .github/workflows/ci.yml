@@ -24,6 +24,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: |
+            core/requirements.txt
+            core/requirements-dev.txt
+            core/pyproject.toml
 
       - name: Install dependencies
         run: |
@@ -56,6 +60,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: |
+            core/requirements.txt
+            core/requirements-dev.txt
+            core/pyproject.toml
 
       - name: Install dependencies
         run: |
@@ -81,6 +89,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: |
+            core/requirements.txt
+            core/requirements-dev.txt
+            core/pyproject.toml
 
       - name: Install dependencies
         run: |
