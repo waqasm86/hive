@@ -1,0 +1,10 @@
+[files]
+extend-exclude = [
+  "docs/i18n/**",
+  "tools/tests/tools/test_csv_tool.py",
+]
+
+[default.extend-words]
+Hashi = "Hashi"
+HashiCorp = "HashiCorp"
+SELEKT = "SELEKT"

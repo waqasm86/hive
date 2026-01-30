@@ -31,63 +31,32 @@ BROWSER_USER_AGENT = (
 
 
 def _get_robots_parser(base_url: str, timeout: float = 10.0) -> RobotFileParser | None:
-    """
-    Fetch and parse robots.txt for a domain.
-
-    Args:
-        base_url: Base URL of the domain (e.g., 'https://example.com')
-        timeout: Timeout for fetching robots.txt
-
-    Returns:
-        RobotFileParser if robots.txt exists and was parsed, None otherwise
-    """
     if base_url in _robots_cache:
         return _robots_cache[base_url]
-
     robots_url = f"{base_url}/robots.txt"
     parser = RobotFileParser()
-
     try:
         response = httpx.get(
-            robots_url,
-            headers={"User-Agent": USER_AGENT},
-            follow_redirects=True,
-            timeout=timeout,
+            robots_url, headers={"User-Agent": USER_AGENT}, follow_redirects=True, timeout=timeout
         )
         if response.status_code == 200:
             parser.parse(response.text.splitlines())
             _robots_cache[base_url] = parser
             return parser
         else:
-            # No robots.txt or error (4xx/5xx) - allow all by convention
             _robots_cache[base_url] = None
             return None
     except (httpx.TimeoutException, httpx.RequestError):
-        # Can't fetch robots.txt - allow but don't cache (might be temporary)
         return None
 
 
 def _is_allowed_by_robots(url: str) -> tuple[bool, str]:
-    """
-    Check if URL is allowed by robots.txt.
-
-    Args:
-        url: Full URL to check
-
-    Returns:
-        Tuple of (allowed: bool, reason: str)
-    """
     parsed = urlparse(url)
     base_url = f"{parsed.scheme}://{parsed.netloc}"
     path = parsed.path or "/"
-
     parser = _get_robots_parser(base_url)
-
     if parser is None:
-        # No robots.txt found or couldn't fetch - all paths allowed
         return True, "No robots.txt found or not accessible"
-
-    # Check both our bot user-agent and wildcard
     if parser.can_fetch(USER_AGENT, path) and parser.can_fetch("*", path):
         return True, "Allowed by robots.txt"
     else:
@@ -95,8 +64,6 @@ def _is_allowed_by_robots(url: str) -> tuple[bool, str]:
 
 
 def register_tools(mcp: FastMCP) -> None:
-    """Register web scrape tools with the MCP server."""
-
     @mcp.tool()
     def web_scrape(
         url: str,
@@ -105,28 +72,9 @@ def register_tools(mcp: FastMCP) -> None:
         max_length: int = 50000,
         respect_robots_txt: bool = True,
     ) -> dict:
-        """
-        Scrape and extract text content from a webpage.
-
-        Use when you need to read the content of a specific URL,
-        extract data from a website, or read articles/documentation.
-
-        Args:
-            url: URL of the webpage to scrape
-            selector: CSS selector to target specific content (e.g., 'article', '.main-content')
-            include_links: Include extracted links in the response
-            max_length: Maximum length of extracted text (1000-500000)
-            respect_robots_txt: Whether to respect robots.txt rules (default: True)
-
-        Returns:
-            Dict with scraped content (url, title, description, content, length) or error dict
-        """
         try:
-            # Validate URL
             if not url.startswith(("http://", "https://")):
                 url = "https://" + url
-
-            # Check robots.txt if enabled
             if respect_robots_txt:
                 allowed, reason = _is_allowed_by_robots(url)
                 if not allowed:
@@ -135,11 +83,7 @@ def register_tools(mcp: FastMCP) -> None:
                         "blocked_by_robots_txt": True,
                         "url": url,
                     }
-
-            # Validate max_length
             max_length = max(1000, min(max_length, 500000))
-
-            # Make request
             response = httpx.get(
                 url,
                 headers={
@@ -150,44 +94,41 @@ def register_tools(mcp: FastMCP) -> None:
                 follow_redirects=True,
                 timeout=30.0,
             )
-
             if response.status_code != 200:
                 return {"error": f"HTTP {response.status_code}: Failed to fetch URL"}
-
-            # Check content type
-            content_type = response.headers.get("content-type", "").lower()
+            content_type_raw = response.headers.get("content-type", "")
+            content_type = content_type_raw.lower() if isinstance(content_type_raw, str) else ""
+            if not content_type:
+                alt = response.headers.get("Content-Type", "")
+                content_type = alt.lower() if isinstance(alt, str) else ""
             if not any(t in content_type for t in ["text/html", "application/xhtml+xml"]):
-                return {
-                    "error": f"Skipping non-HTML content (Content-Type: {content_type})",
-                    "url": url,
-                    "skipped": True,
-                }
-
-            # Parse HTML
+                body_snippet = (response.text or "")[:500].lower()
+                if not (
+                    "<html" in body_snippet
+                    or "<!doctype html" in body_snippet
+                    or "<body" in body_snippet
+                ):
+                    return {
+                        "error": f"Skipping non-HTML content (Content-Type: {content_type_raw})",
+                        "url": url,
+                        "skipped": True,
+                    }
             soup = BeautifulSoup(response.text, "html.parser")
-
-            # Remove noise elements
             for tag in soup(
                 ["script", "style", "nav", "footer", "header", "aside", "noscript", "iframe"]
             ):
                 tag.decompose()
-
-            # Get title and description
             title = soup.title.get_text(strip=True) if soup.title else ""
-
             description = ""
             meta_desc = soup.find("meta", attrs={"name": "description"})
             if meta_desc:
                 description = meta_desc.get("content", "")
-
-            # Target content
             if selector:
                 content_elem = soup.select_one(selector)
                 if not content_elem:
                     return {"error": f"No elements found matching selector: {selector}"}
                 text = content_elem.get_text(separator=" ", strip=True)
             else:
-                # Auto-detect main content
                 main_content = (
                     soup.find("article")
                     or soup.find("main")
@@ -196,14 +137,9 @@ def register_tools(mcp: FastMCP) -> None:
                     or soup.find("body")
                 )
                 text = main_content.get_text(separator=" ", strip=True) if main_content else ""
-
-            # Clean up whitespace
             text = " ".join(text.split())
-
-            # Truncate if needed
             if len(text) > max_length:
                 text = text[:max_length] + "..."
-
             result: dict[str, Any] = {
                 "url": str(response.url),
                 "title": title,
@@ -212,22 +148,17 @@ def register_tools(mcp: FastMCP) -> None:
                 "length": len(text),
                 "robots_txt_respected": respect_robots_txt,
             }
-
-            # Extract links if requested
             if include_links:
                 links: list[dict[str, str]] = []
-                base_url = str(response.url)  # Use final URL after redirects
+                base_url = str(response.url)
                 for a in soup.find_all("a", href=True)[:50]:
                     href = a["href"]
-                    # Convert relative URLs to absolute URLs
                     absolute_href = urljoin(base_url, href)
                     link_text = a.get_text(strip=True)
                     if link_text and absolute_href:
                         links.append({"text": link_text, "href": absolute_href})
                 result["links"] = links
-
             return result
-
         except httpx.TimeoutException:
             return {"error": "Request timed out"}
         except httpx.RequestError as e:

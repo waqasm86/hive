@@ -410,4 +410,8 @@ If credentials are missing, you'll receive a response like:
 | ------------ | ---------------------- | ----------------------------------------------------- |
 | `web_search` | `BRAVE_SEARCH_API_KEY` | [brave.com/search/api](https://brave.com/search/api/) |
 
-Note: The MCP server itself requires `ANTHROPIC_API_KEY` at startup for LLM operations.
+Note: The MCP server no longer requires `ANTHROPIC_API_KEY` at startup for test
+generation. Test *generation* is now a responsibility of the calling agent (use
+the Write tool to write tests from the guidelines returned by the MCP tools).
+LLM-based features remain optional and will use configured providers when
+available (e.g., `LiteLLMProvider` or provider-specific wrappers).

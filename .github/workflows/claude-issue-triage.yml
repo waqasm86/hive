@@ -6,8 +6,8 @@ on:
 
 jobs:
   triage:
-    # Only run triage on the upstream repo where secrets (Anthropic key) are configured
-    if: github.repository == 'adenhq/hive'
+    # Run if secrets are present (allows forks to run it if they add secrets)
+    if: secrets.ANTHROPIC_API_KEY != '' || secrets.CLAUDE_CODE_OAUTH_TOKEN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -1,6 +1,5 @@
 """Tests for csv_tool - Read and manipulate CSV files."""
 
-import importlib.util
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,8 +7,6 @@ import pytest
 from fastmcp import FastMCP
 
 from aden_tools.tools.csv_tool.csv_tool import register_tools
-
-duckdb_available = importlib.util.find_spec("duckdb") is not None
 
 # Test IDs for sandbox
 TEST_WORKSPACE_ID = "test-workspace"
@@ -623,7 +620,6 @@ class TestCsvInfo:
         assert ".csv" in result["error"].lower()
 
 
-@pytest.mark.skipif(not duckdb_available, reason="duckdb not installed")
 class TestCsvSql:
     """Tests for csv_sql function (requires duckdb)."""
 
