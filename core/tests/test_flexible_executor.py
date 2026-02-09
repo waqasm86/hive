@@ -281,6 +281,14 @@ class TestHybridJudge:
 
         assert judgment.action == JudgmentAction.RETRY
 
+    def test_format_feedback_handles_format_errors(self):
+        """Ensure feedback formatting falls back on format errors."""
+        judge = HybridJudge()
+        template = "{result[0]}"
+
+        assert judge._format_feedback(template, {"result": None}) == template
+        assert judge._format_feedback(template, {"result": []}) == template
+
     def test_rule_priority(self):
         """Test that higher priority rules are checked first."""
         judge = HybridJudge()
