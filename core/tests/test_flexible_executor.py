@@ -195,6 +195,16 @@ class TestCodeSandbox:
         assert result.success is True
         assert result.result == 8
 
+    def test_safe_eval_boolop_short_circuit(self):
+        """Ensure safe_eval short-circuits boolean ops."""
+        result = safe_eval("x is not None and x.value > 0", inputs={"x": None})
+        assert result.success is True
+        assert result.result is False
+
+        result = safe_eval("x is None or x.value > 0", inputs={"x": None})
+        assert result.success is True
+        assert result.result is True
+
     def test_allowed_modules(self):
         """Test that allowed modules work."""
         sandbox = CodeSandbox()

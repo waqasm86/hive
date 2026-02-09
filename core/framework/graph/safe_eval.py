@@ -125,11 +125,16 @@ class SafeEvalVisitor(ast.NodeVisitor):
         return True
 
     def visit_BoolOp(self, node: ast.BoolOp) -> Any:
-        values = [self.visit(v) for v in node.values]
         if isinstance(node.op, ast.And):
-            return all(values)
-        elif isinstance(node.op, ast.Or):
-            return any(values)
+            for value_node in node.values:
+                if not self.visit(value_node):
+                    return False
+            return True
+        if isinstance(node.op, ast.Or):
+            for value_node in node.values:
+                if self.visit(value_node):
+                    return True
+            return False
         raise ValueError(f"Boolean operator {type(node.op).__name__} is not allowed")
 
     def visit_IfExp(self, node: ast.IfExp) -> Any:
