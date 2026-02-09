@@ -199,6 +199,43 @@ async def test_executor_respects_default_max_retries(runtime):
 
 
 @pytest.mark.asyncio
+async def test_executor_honors_graph_max_retries_default(runtime):
+    """
+    Test that executor uses graph max_retries_per_node when node doesn't set max_retries.
+    """
+    node_spec = NodeSpec(
+        id="graph_default_node",
+        name="Graph Default Node",
+        description="Node relies on graph max_retries_per_node",
+        node_type="function",
+        output_keys=["result"],
+    )
+
+    graph = GraphSpec(
+        id="test_graph",
+        goal_id="test_goal",
+        name="Test Graph",
+        entry_node="graph_default_node",
+        nodes=[node_spec],
+        edges=[],
+        terminal_nodes=["graph_default_node"],
+        max_retries_per_node=1,
+    )
+
+    goal = Goal(id="test_goal", name="Test Goal", description="Test graph max_retries default")
+
+    executor = GraphExecutor(runtime=runtime)
+    failing_node = AlwaysFailsNode()
+    executor.register_node("graph_default_node", failing_node)
+
+    result = await executor.execute(graph, goal, {})
+
+    assert not result.success
+    assert failing_node.attempt_count == 1
+    assert "failed after 1 attempts" in result.error
+
+
+@pytest.mark.asyncio
 async def test_executor_max_retries_two_succeeds_on_second(runtime):
     """
     Test that max_retries=2 allows two attempts total.

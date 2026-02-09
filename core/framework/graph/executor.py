@@ -178,6 +178,17 @@ class GraphExecutor:
             llm_provider=llm,
         )
 
+    def _resolve_max_retries(self, graph: GraphSpec, node_spec: Any) -> int:
+        """Resolve effective max_retries, honoring graph defaults when node doesn't set one."""
+        if node_spec is None:
+            return graph.max_retries_per_node
+
+        fields_set = getattr(node_spec, "model_fields_set", set())
+        if "max_retries" in fields_set:
+            return node_spec.max_retries
+
+        return graph.max_retries_per_node
+
         # Parallel execution settings
         self.enable_parallel_execution = enable_parallel_execution
         self._parallel_config = parallel_config or ParallelExecutionConfig()
@@ -659,8 +670,7 @@ class GraphExecutor:
                         node_retry_counts.get(current_node_id, 0) + 1
                     )
 
-                    # [CORRECTED] Use node_spec.max_retries instead of hardcoded 3
-                    max_retries = getattr(node_spec, "max_retries", 3)
+                    max_retries = self._resolve_max_retries(graph, node_spec)
 
                     # Event loop nodes handle retry internally via judge —
                     # executor retry is catastrophic (retry multiplication)
@@ -1478,7 +1488,7 @@ class GraphExecutor:
                 branch.error = f"Node {branch.node_id} not found in graph"
                 return branch, RuntimeError(branch.error)
 
-            effective_max_retries = node_spec.max_retries
+            effective_max_retries = self._resolve_max_retries(graph, node_spec)
             if node_spec.node_type == "event_loop":
                 if effective_max_retries > 1:
                     self.logger.warning(
