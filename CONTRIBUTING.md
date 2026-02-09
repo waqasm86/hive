@@ -48,7 +48,7 @@ You may submit PRs without prior assignment for:
    ```bash
    make check    # Lint and format checks (ruff check + ruff format --check on core/ and tools/)
    make test     # Core tests (cd core && pytest tests/ -v)
-   uv run --project core mypy
+   cd core && uv run mypy framework
    ```
 6. Commit your changes following our commit conventions
 7. Push to your fork and submit a Pull Request
@@ -144,7 +144,7 @@ make check
 make test
 
 # Run mypy type checks (mirrors CI mypy job)
-uv run --project core mypy
+cd core && uv run mypy framework
 
 # Or run tests directly
 cd core && pytest tests/ -v
