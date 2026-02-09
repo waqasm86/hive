@@ -178,6 +178,13 @@ class GraphExecutor:
             llm_provider=llm,
         )
 
+        # Parallel execution settings
+        self.enable_parallel_execution = enable_parallel_execution
+        self._parallel_config = parallel_config or ParallelExecutionConfig()
+
+        # Pause/resume control
+        self._pause_requested = asyncio.Event()
+
     def _resolve_max_retries(self, graph: GraphSpec, node_spec: Any) -> int:
         """Resolve effective max_retries, honoring graph defaults when node doesn't set one."""
         if node_spec is None:
@@ -188,13 +195,6 @@ class GraphExecutor:
             return node_spec.max_retries
 
         return graph.max_retries_per_node
-
-        # Parallel execution settings
-        self.enable_parallel_execution = enable_parallel_execution
-        self._parallel_config = parallel_config or ParallelExecutionConfig()
-
-        # Pause/resume control
-        self._pause_requested = asyncio.Event()
 
     def _validate_tools(self, graph: GraphSpec) -> list[str]:
         """
