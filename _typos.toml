@@ -1,3 +1,13 @@
 [default.extend-words]
 Hashi = "Hashi"
 HashiCorp = "HashiCorp"
+
+[files]
+extend-exclude = [
+  "docs/i18n/**",
+]
+
+[files]
+extend-exclude = [
+  "docs/i18n/**",
+]
