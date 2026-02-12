@@ -1,6 +1,7 @@
 """Tests for file_system_toolkits tools (FastMCP)."""
 
 import os
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -575,7 +576,12 @@ class TestExecuteCommandTool:
         # Create a test file
         (tmp_path / "testfile.txt").write_text("content")
 
-        result = execute_command_fn(command=f"ls {tmp_path}", **mock_workspace)
+        path_arg = str(tmp_path).replace("\\", "/")
+        command = (
+            f'"{sys.executable}" -c '
+            '"import os; print("\\\\n".join(os.listdir(r"{}")))"'.format(path_arg)
+        )
+        result = execute_command_fn(command=command, **mock_workspace)
 
         assert result["success"] is True
         assert result["return_code"] == 0
@@ -583,7 +589,11 @@ class TestExecuteCommandTool:
 
     def test_execute_command_with_pipe(self, execute_command_fn, mock_workspace, mock_secure_path):
         """Executing a command with pipe works correctly."""
-        result = execute_command_fn(command="echo 'hello world' | tr 'a-z' 'A-Z'", **mock_workspace)
+        command = (
+            f'echo hello world | "{sys.executable}" -c '
+            '"import sys; print(sys.stdin.read().upper())"'
+        )
+        result = execute_command_fn(command=command, **mock_workspace)
 
         assert result["success"] is True
         assert result["return_code"] == 0
