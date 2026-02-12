@@ -18,19 +18,19 @@ from unittest.mock import patch
 
 import pytest
 from core.framework.credentials import (
+    BearerTokenProvider,
     CompositeStorage,
     CredentialKey,
     CredentialKeyNotFoundError,
     CredentialNotFoundError,
     CredentialObject,
+    CredentialRefreshError,
     CredentialStore,
     CredentialType,
     CredentialUsageSpec,
     EncryptedFileStorage,
     EnvVarStorage,
     InMemoryStorage,
-    BearerTokenProvider,
-    CredentialRefreshError,
     StaticProvider,
     TemplateResolver,
 )
