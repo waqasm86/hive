@@ -147,6 +147,9 @@ uv run python -m framework test-list <goal_id>
 
 For detailed testing workflows, see the [hive-test skill](../.claude/skills/hive-test/SKILL.md).
 
+Note: Real-API streaming tests in `core/tests/test_litellm_streaming.py` are opt-in and
+require `RUN_REAL_API_TESTS=1` plus the provider API keys.
+
 ### Analyzing Agent Behavior with Builder
 
 The BuilderQuery interface allows you to analyze agent runs and identify improvements:
