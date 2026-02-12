@@ -1,6 +1,7 @@
 """Tests for file_system_toolkits tools (FastMCP)."""
 
 import os
+import shlex
 import sys
 from unittest.mock import patch
 
@@ -577,11 +578,8 @@ class TestExecuteCommandTool:
         (tmp_path / "testfile.txt").write_text("content")
 
         path_arg = str(tmp_path).replace("\\", "/")
-        command = (
-            f'"{sys.executable}" -c "import os; print("\\\\n".join(os.listdir(r"{{}}")))"'.format(
-                path_arg
-            )
-        )
+        code = f'import os; print("\\\\n".join(os.listdir(r"{path_arg}")))'
+        command = f'"{sys.executable}" -c {shlex.quote(code)}'
         result = execute_command_fn(command=command, **mock_workspace)
 
         assert result["success"] is True
