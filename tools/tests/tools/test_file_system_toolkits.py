@@ -578,8 +578,8 @@ class TestExecuteCommandTool:
 
         path_arg = str(tmp_path).replace("\\", "/")
         command = (
-            f"\"{sys.executable}\" -c "
-            "\"import os; print('\\\\n'.join(os.listdir(r'{}')))\"".format(path_arg)
+            f'"{sys.executable}" -c '
+            '"import os; print("\\\\n".join(os.listdir(r"{}")))"'.format(path_arg)
         )
         result = execute_command_fn(command=command, **mock_workspace)
 
@@ -590,8 +590,8 @@ class TestExecuteCommandTool:
     def test_execute_command_with_pipe(self, execute_command_fn, mock_workspace, mock_secure_path):
         """Executing a command with pipe works correctly."""
         command = (
-            f"echo hello world | \"{sys.executable}\" -c "
-            "\"import sys; print(sys.stdin.read().upper())\""
+            f'echo hello world | "{sys.executable}" -c '
+            '"import sys; print(sys.stdin.read().upper())"'
         )
         result = execute_command_fn(command=command, **mock_workspace)
 
