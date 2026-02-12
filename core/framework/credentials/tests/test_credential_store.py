@@ -18,11 +18,13 @@ from unittest.mock import patch
 
 import pytest
 from core.framework.credentials import (
+    BearerTokenProvider,
     CompositeStorage,
     CredentialKey,
     CredentialKeyNotFoundError,
     CredentialNotFoundError,
     CredentialObject,
+    CredentialRefreshError,
     CredentialStore,
     CredentialType,
     CredentialUsageSpec,
@@ -422,6 +424,74 @@ class TestStaticProvider:
         cred = CredentialObject(id="test", keys={})
 
         assert not provider.should_refresh(cred)
+
+
+class TestBearerTokenProvider:
+    """Tests for BearerTokenProvider."""
+
+    def test_provider_id(self):
+        provider = BearerTokenProvider()
+        assert provider.provider_id == "bearer_token"
+
+    def test_supported_types(self):
+        provider = BearerTokenProvider()
+        assert provider.supported_types == [CredentialType.BEARER_TOKEN]
+
+    def test_validate_missing_token(self):
+        provider = BearerTokenProvider()
+        cred = CredentialObject(id="token", keys={})
+        assert not provider.validate(cred)
+
+    def test_validate_access_token(self):
+        provider = BearerTokenProvider()
+        cred = CredentialObject(
+            id="token",
+            keys={"access_token": CredentialKey(name="access_token", value=SecretStr("abc"))},
+        )
+        assert provider.validate(cred)
+
+    def test_validate_token_key(self):
+        provider = BearerTokenProvider()
+        cred = CredentialObject(
+            id="token",
+            keys={"token": CredentialKey(name="token", value=SecretStr("abc"))},
+        )
+        assert provider.validate(cred)
+
+    def test_validate_expired(self):
+        provider = BearerTokenProvider()
+        past = datetime.now(UTC) - timedelta(minutes=1)
+        cred = CredentialObject(
+            id="token",
+            keys={
+                "access_token": CredentialKey(
+                    name="access_token", value=SecretStr("abc"), expires_at=past
+                )
+            },
+        )
+        assert not provider.validate(cred)
+
+    def test_should_refresh_near_expiration(self):
+        provider = BearerTokenProvider()
+        soon = datetime.now(UTC) + timedelta(minutes=1)
+        cred = CredentialObject(
+            id="token",
+            keys={
+                "access_token": CredentialKey(
+                    name="access_token", value=SecretStr("abc"), expires_at=soon
+                )
+            },
+        )
+        assert provider.should_refresh(cred)
+
+    def test_refresh_raises(self):
+        provider = BearerTokenProvider()
+        cred = CredentialObject(
+            id="token",
+            keys={"access_token": CredentialKey(name="access_token", value=SecretStr("abc"))},
+        )
+        with pytest.raises(CredentialRefreshError):
+            provider.refresh(cred)
 
 
 class TestTemplateResolver:
