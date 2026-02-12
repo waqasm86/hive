@@ -328,10 +328,16 @@ class FlexibleGraphExecutor:
             outputs_to_store = work_result.outputs.copy()
             if step.expected_outputs and "result" in outputs_to_store:
                 result_value = outputs_to_store["result"]
-                # For each expected output key that's not in outputs, map from "result"
-                for expected_key in step.expected_outputs:
-                    if expected_key not in outputs_to_store:
-                        outputs_to_store[expected_key] = result_value
+                if isinstance(result_value, dict):
+                    # Map expected outputs from result dict when available.
+                    for expected_key in step.expected_outputs:
+                        if expected_key not in outputs_to_store and expected_key in result_value:
+                            outputs_to_store[expected_key] = result_value[expected_key]
+                else:
+                    # For each expected output key that's not in outputs, map from "result"
+                    for expected_key in step.expected_outputs:
+                        if expected_key not in outputs_to_store:
+                            outputs_to_store[expected_key] = result_value
 
             # Update context with mapped outputs
             context.update(outputs_to_store)

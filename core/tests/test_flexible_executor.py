@@ -10,6 +10,7 @@ Tests cover:
 """
 
 import asyncio
+from typing import Any
 
 import pytest
 
@@ -436,6 +437,65 @@ class TestFlexibleExecutorIntegration:
 
         assert len(executor.judge.rules) == 1
         assert executor.judge.rules[0].id == "custom_rule"
+
+    def test_expected_outputs_unpacking(self, tmp_path):
+        """Ensure result dict is unpacked into expected outputs."""
+        from framework.graph.flexible_executor import FlexibleGraphExecutor
+        from framework.graph.worker_node import StepExecutionResult
+        from framework.runtime.core import Runtime
+
+        runtime = Runtime(storage_path=tmp_path / "runtime")
+        executor = FlexibleGraphExecutor(runtime=runtime)
+
+        step = PlanStep(
+            id="step_1",
+            description="Test expected outputs",
+            action=ActionSpec(action_type=ActionType.FUNCTION),
+            expected_outputs=["foo", "bar"],
+        )
+        plan = Plan(
+            id="plan_1",
+            goal_id="goal_1",
+            description="Test plan",
+            steps=[step],
+        )
+        goal = Goal(
+            id="goal_1",
+            name="Test Goal",
+            description="Goal",
+            success_criteria=[
+                SuccessCriterion(id="sc1", description="Done", metric="completion", target="100%")
+            ],
+        )
+
+        work_result = StepExecutionResult(
+            success=True,
+            outputs={"result": {"foo": 1, "bar": 2}},
+        )
+        judgment = Judgment(
+            action=JudgmentAction.ACCEPT,
+            reasoning="ok",
+            confidence=1.0,
+        )
+
+        context: dict[str, Any] = {}
+        result = asyncio.run(
+            executor._handle_judgment(
+                step=step,
+                work_result=work_result,
+                judgment=judgment,
+                plan=plan,
+                goal=goal,
+                context=context,
+                steps_executed=0,
+                total_tokens=0,
+                total_latency=0,
+            )
+        )
+
+        assert result is None
+        assert context["foo"] == 1
+        assert context["bar"] == 2
 
 
 if __name__ == "__main__":
