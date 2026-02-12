@@ -140,6 +140,14 @@ def _has_api_key(env_var: str) -> bool:
         return False
 
 
+def _require_real_api(env_var: str) -> None:
+    """Skip unless real API tests are explicitly enabled and credentials exist."""
+    if os.environ.get("RUN_REAL_API_TESTS") != "1":
+        pytest.skip("Set RUN_REAL_API_TESTS=1 to enable real API streaming tests.")
+    if not _has_api_key(env_var):
+        pytest.skip(f"{env_var} not set")
+
+
 # ---------------------------------------------------------------------------
 # Real API tests — text streaming
 # ---------------------------------------------------------------------------
@@ -150,8 +158,7 @@ class TestRealAPITextStreaming:
     @pytest.mark.asyncio
     async def test_text_stream(self, model: str, prefix: str, env_var: str):
         """Stream a multi-paragraph response to exercise chunked delivery."""
-        if not _has_api_key(env_var):
-            pytest.skip(f"{env_var} not set")
+        _require_real_api(env_var)
 
         provider = LiteLLMProvider(model=model)
         events = await _collect_stream(
@@ -211,8 +218,7 @@ class TestRealAPIToolCallStreaming:
     @pytest.mark.asyncio
     async def test_tool_call_stream(self, model: str, prefix: str, env_var: str):
         """Stream a single tool call with complex arguments."""
-        if not _has_api_key(env_var):
-            pytest.skip(f"{env_var} not set")
+        _require_real_api(env_var)
 
         provider = LiteLLMProvider(model=model)
         events = await _collect_stream(
@@ -252,8 +258,7 @@ class TestRealAPIToolCallStreaming:
     @pytest.mark.asyncio
     async def test_multi_tool_call_stream(self, model: str, prefix: str, env_var: str):
         """Stream a response that should invoke multiple tool calls."""
-        if not _has_api_key(env_var):
-            pytest.skip(f"{env_var} not set")
+        _require_real_api(env_var)
 
         provider = LiteLLMProvider(model=model)
         events = await _collect_stream(

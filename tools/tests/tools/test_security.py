@@ -6,6 +6,22 @@ from unittest.mock import patch
 import pytest
 
 
+def _skip_if_symlink_unavailable(base_dir):
+    """Skip test if the OS/user cannot create symlinks."""
+    target = base_dir / ".symlink_target"
+    link = base_dir / ".symlink_link"
+    try:
+        target.write_text("x")
+        link.symlink_to(target)
+    except (OSError, NotImplementedError):
+        pytest.skip("Symlinks are not available in this environment.")
+    else:
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        if target.exists():
+            target.unlink()
+
+
 class TestGetSecurePath:
     """Tests for get_secure_path() function."""
 
@@ -232,6 +248,8 @@ class TestGetSecurePath:
         """Symlinks that stay within the sandbox are allowed."""
         from aden_tools.tools.file_system_toolkits.security import get_secure_path
 
+        _skip_if_symlink_unavailable(self.workspaces_dir)
+
         # Create session directory structure
         session_dir = self.workspaces_dir / "test-workspace" / "test-agent" / "test-session"
         session_dir.mkdir(parents=True, exist_ok=True)
@@ -256,6 +274,8 @@ class TestGetSecurePath:
         This test documents that pattern.
         """
         from aden_tools.tools.file_system_toolkits.security import get_secure_path
+
+        _skip_if_symlink_unavailable(self.workspaces_dir)
 
         # Create session directory
         session_dir = self.workspaces_dir / "test-workspace" / "test-agent" / "test-session"

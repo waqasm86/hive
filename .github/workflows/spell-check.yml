@@ -1,0 +1,19 @@
+name: Spell Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  typos:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run typos
+        uses: crate-ci/typos@v1
+        with:
+          files: |
+            README.md
+            docs

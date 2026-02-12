@@ -19,6 +19,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const core = require('@actions/core');
+
             const pr = context.payload.pull_request;
             const prNumber = pr.number;
             const prBody = pr.body || '';
@@ -34,13 +36,39 @@ jobs:
               return;
             }
 
-            // Extract issue numbers from body and title
-            // Matches: fixes #123, closes #123, resolves #123, or plain #123
-            const issuePattern = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)?\s*#(\d+)/gi;
+            // Extract issue numbers from body and title.
+            // Matches: fixes #123, closes #123, resolves #123, owner/repo#123, or issue URLs.
+            const issuePattern = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)?\s*(?:https?:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/(?:issues|pull)\/(\d+)|([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)#(\d+)|#(\d+))/gi;
 
+            const repoSlug = `${context.repo.owner}/${context.repo.repo}`.toLowerCase();
             const allText = `${prTitle} ${prBody}`;
             const matches = [...allText.matchAll(issuePattern)];
-            const issueNumbers = [...new Set(matches.map(m => parseInt(m[1], 10)))];
+            const issueNumbers = [
+              ...new Set(
+                matches
+                  .map((m) => {
+                    if (m[3]) {
+                      const owner = m[1];
+                      const repo = m[2];
+                      return `${owner}/${repo}`.toLowerCase() === repoSlug
+                        ? parseInt(m[3], 10)
+                        : null;
+                    }
+                    if (m[6]) {
+                      const owner = m[4];
+                      const repo = m[5];
+                      return `${owner}/${repo}`.toLowerCase() === repoSlug
+                        ? parseInt(m[6], 10)
+                        : null;
+                    }
+                    if (m[7]) {
+                      return parseInt(m[7], 10);
+                    }
+                    return null;
+                  })
+                  .filter((n) => Number.isInteger(n))
+              ),
+            ];
 
             console.log(`PR #${prNumber}:`);
             console.log(`  Found issue references: ${issueNumbers.length > 0 ? issueNumbers.join(', ') : 'none'}`);
