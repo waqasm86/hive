@@ -578,8 +578,9 @@ class TestExecuteCommandTool:
 
         path_arg = str(tmp_path).replace("\\", "/")
         command = (
-            f'"{sys.executable}" -c '
-            '"import os; print("\\\\n".join(os.listdir(r"{}")))"'.format(path_arg)
+            f'"{sys.executable}" -c "import os; print("\\\\n".join(os.listdir(r"{{}}")))"'.format(
+                path_arg
+            )
         )
         result = execute_command_fn(command=command, **mock_workspace)
 
