@@ -6,8 +6,3 @@ HashiCorp = "HashiCorp"
 extend-exclude = [
   "docs/i18n/**",
 ]
-
-[files]
-extend-exclude = [
-  "docs/i18n/**",
-]
