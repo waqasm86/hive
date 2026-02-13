@@ -38,6 +38,31 @@ jobs:
           uv run --project core ruff format --check core/
           uv run --project core ruff format --check tools/
 
+  mypy:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          cd core
+          uv sync --group dev
+
+      - name: Run mypy
+        continue-on-error: true
+        run: |
+          cd core
+          uv run mypy framework
+
   test:
     name: Test Python Framework
     runs-on: ${{ matrix.os }}
